@@ -1,0 +1,12 @@
+{
+  "domain": "summary_agent",
+  "name": "Summary Agent",
+  "codeowners": ["@allenporter"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/allenporter/home-assistant-summary-agent",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/allenporter/home-assistant-summary-agent/issues",
+  "requirements": [],
+  "version": "1.0.0"
+}
