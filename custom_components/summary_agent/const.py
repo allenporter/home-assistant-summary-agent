@@ -39,21 +39,21 @@ AREA_SUMMARY_USER_PROMPT = """
 Please summarize the following area:
 
 Area: {{ area }}
-{% set iterated = false %}
-{%- for device in area_devices(area) -%}
+{%- set devices = area_devices(area) -%}
+{% for device in devices -%}
+    {%- set iterated = true %}
     {%- if not device_attr(device, "disabled_by") and not device_attr(device, "entry_type") and device_attr(device, "name") %}
     {%- set device_name = device_attr(device, "name_by_user") | default(device_attr(device, "name"), True) %}
-
 - {{ device_name  }}{% if device_attr(device, "model") and (device_attr(device, "model") | string) not in (device_attr(device, "name") | string) %} ({{ device_attr(device, "model") }}){% endif %}
     {%- set entity_info = namespace(printed=false) %}
     {%- for entity_id in device_entities(device) -%}
     {%- set entity_name = state_attr(entity_id, "friendly_name") | replace(device_name, "") | trim %}
-{{ entity_id.split(".")[0] -}}
+  - {{ entity_id.split(".")[0] -}}
     {%- if entity_name %} {{ entity_name }}{% endif -%}
     : {{ states(entity_id, rounded=True, with_unit=True) }}
     {%- endfor %}
 {%- endif %}
 {%- endfor %}
-{% if not iterated %}- No devices{% endif %}
+{%- if not devices %}- No devices{% endif %}
 Summary:
 """

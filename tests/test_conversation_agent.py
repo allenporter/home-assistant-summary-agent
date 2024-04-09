@@ -1,15 +1,16 @@
 """Test Synthetic Home sensor."""
 
 from typing import Literal
+import textwrap
 
 import pytest
 
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.components import conversation
-from homeassistant.helpers import intent
+from homeassistant.helpers import intent, entity_registry as er, area_registry as ar, device_registry as dr
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
@@ -19,6 +20,7 @@ from custom_components.summary_agent.const import (
     DOMAIN,
 )
 
+from .conftest import TEST_DEVICE_ID, TEST_DEVICE_NAME
 
 TEST_AGENT = "conversation.fake_agent"
 
@@ -96,20 +98,37 @@ async def test_area_no_devices(
     assert len(fake_agent.conversations) == 1
     input_prompt = fake_agent.conversations[0]
     assert AREA_SUMMARY_SYSTEM_PROMPT in input_prompt
-    assert "Area: Kitchen\n\n- No devices\n" in input_prompt
+    assert textwrap.dedent(
+        """
+        Area: Kitchen
+        - No devices
+        Summary:"""
+    ) in input_prompt
 
 
-class FakeSensor(SensorEntity):
+
+class FakeTempSensor(SensorEntity):
     """Fake agent."""
 
     _has_entity_name = True
     _attr_name = "Temperature"
-    _attr_unit_of_measure = "XC"
+    _attr_native_unit_of_measurement = "°F"
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_unique_id = "12345"
+    _attr_device_info = dr.DeviceInfo(identifiers={TEST_DEVICE_ID})
+    _attr_native_value = 68
 
-    @property
-    def state(self) -> int:
-        """Return current tate of the fake sensor."""
-        return 65
+
+class FakeHumiditySensor(SensorEntity):
+    """Fake agent."""
+
+    _has_entity_name = True
+    _attr_name = "Humidity"
+    _attr_device_class = SensorDeviceClass.HUMIDITY
+    _attr_unique_id = "54321"
+    _attr_device_info = dr.DeviceInfo(identifiers={TEST_DEVICE_ID})
+    _attr_native_unit_of_measurement = "%"
+    _attr_native_value = 45
 
 
 @pytest.mark.parametrize(
@@ -119,7 +138,8 @@ class FakeSensor(SensorEntity):
             {
                 "conversation": [FakeAgent(TEST_AGENT)],
                 "sensor": [
-                    FakeSensor(),
+                    FakeTempSensor(),
+                    FakeHumiditySensor(),
                 ],
             }
         ),
@@ -129,8 +149,20 @@ async def test_area_with_devices(
     hass: HomeAssistant,
     mock_entities: dict[str, Entity],
     setup_integration: None,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Tests an area summary that has no devices."""
+
+    await hass.async_block_till_done()
+
+    area_registry: ar.AreaRegistry = ar.async_get(hass)
+    area_entry = area_registry.async_get_or_create("Kitchen")
+
+    # Associate all devices with the area
+    #device_registry = dr.async_get(hass)
+    for device_entry in device_registry.devices.values():
+        device_registry.async_update_device(device_entry.id, area_id=area_entry.id)
+
     fake_agent = mock_entities["conversation"][0]
     fake_agent.responses.append(FAKE_SUMMARY)
 
@@ -150,4 +182,10 @@ async def test_area_with_devices(
     assert len(fake_agent.conversations) == 1
     input_prompt = fake_agent.conversations[0]
     assert AREA_SUMMARY_SYSTEM_PROMPT in input_prompt
-    assert "Area: Kitchen\n\n- Sensor\n" in input_prompt
+    assert textwrap.dedent("""
+        Area: Kitchen
+        - Some Device Name
+          - sensor Temperature: 20 °C
+          - sensor Humidity: 45 %
+        Summary:"""
+    ) in input_prompt

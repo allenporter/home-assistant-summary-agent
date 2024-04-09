@@ -11,6 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -31,6 +32,8 @@ from custom_components.summary_agent.const import (
 _LOGGER = logging.getLogger(__name__)
 
 TEST_DOMAIN = "test"
+TEST_DEVICE_ID = (TEST_DOMAIN, "some-device-id")
+TEST_DEVICE_NAME = "Some Device Name"
 
 
 @pytest.fixture(autouse=True)
@@ -140,7 +143,14 @@ async def mock_test_platform_fixture(
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
-    _LOGGER.info("mock_platform_fixture=%s", mock_entities.items())
+    # Create a fake device for associating with entities
+    device_registry: dr.DeviceRegistry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        name=TEST_DEVICE_NAME,
+        identifiers={TEST_DEVICE_ID},
+    )
+
     for domain, entities in mock_entities.items():
 
         async def async_setup_entry_platform(
@@ -150,7 +160,6 @@ async def mock_test_platform_fixture(
             async_add_entities: AddEntitiesCallback,
         ) -> None:
             """Set up test event platform via config entry."""
-            _LOGGER.info("async_setup_entry_platform")
             async_add_entities(add_entities)
 
         _LOGGER.info(f"creating mock_platform for={TEST_DOMAIN}.{domain}")
