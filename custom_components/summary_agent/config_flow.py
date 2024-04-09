@@ -4,11 +4,11 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_AGENT_ID
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        # vol.Required(CONF_FILENAME): str,
+        vol.Required(CONF_AGENT_ID): str,
     }
 )
 
