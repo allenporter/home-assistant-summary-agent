@@ -54,6 +54,8 @@ Area: {{ area }}
     {%- endfor %}
 {%- endif %}
 {%- endfor %}
-{%- if not devices %}- No devices{% endif %}
+{%- if not devices %}
+- No devices
+{%- endif %}
 Summary:
 """
