@@ -2,6 +2,7 @@
 
 import logging
 from typing import Literal
+from abc import abstractmethod
 
 from homeassistant.const import MATCH_ALL
 from homeassistant.config_entries import ConfigEntry
@@ -26,19 +27,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up conversation entities."""
 
-    entity = AreaSummaryConversationEntity(hass, config_entry.data[CONF_AGENT_ID])
+    entity = AreaSummaryConversationEntity(config_entry.data[CONF_AGENT_ID])
     conversation.async_set_agent(hass, config_entry, entity)
     async_add_entities([entity])
 
 
-class AreaSummaryConversationEntity(conversation.ConversationEntity):
+
+
+class BaseAgentConversationEntity(conversation.ConversationEntity):
     """Conversation agent that summarizes an areas."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, hass: HomeAssistant, agent_id: str) -> None:
-        """Initialize AreaSummaryConversationEntity."""
-        self._attr_name = "Area Summary"
+    def __init__(self, agent_id: str) -> None:
+        """Initialize BaseAgentConversationEntity."""
         self._agent_id = agent_id
 
     @property
@@ -52,15 +54,7 @@ class AreaSummaryConversationEntity(conversation.ConversationEntity):
         """Process a sentence."""
 
         try:
-            prompt = self._async_generate_prompt(
-                "\n".join(
-                    [
-                        AREA_SUMMARY_SYSTEM_PROMPT,
-                        AREA_SUMMARY_USER_PROMPT,
-                    ]
-                ),
-                area=user_input.text,
-            )
+            prompt = self._async_generate_prompt(user_input.text)
         except TemplateError as err:
             _LOGGER.error("Error rendering prompt: %s", err)
             intent_response = intent.IntentResponse(language=user_input.language)
@@ -88,11 +82,28 @@ class AreaSummaryConversationEntity(conversation.ConversationEntity):
     async def async_prepare(self, language: str | None = None) -> None:
         """Load intents for a language."""
 
+    @abstractmethod
     def _async_generate_prompt(self, raw_prompt: str, area: str) -> str:
         """Generate a prompt for the user."""
+
+
+class AreaSummaryConversationEntity(BaseAgentConversationEntity):
+    """Conversation agent that summarizes an areas."""
+
+    _attr_name = "Area Summary"
+    _attr_unique_id = "area-summary"
+
+    def _async_generate_prompt(self, text: str) -> str:
+        """Generate a prompt for the user."""
+        raw_prompt = "\n".join(
+            [
+                AREA_SUMMARY_SYSTEM_PROMPT,
+                AREA_SUMMARY_USER_PROMPT,
+            ]
+        )
         return template.Template(raw_prompt, self.hass).async_render(
             {
-                "area": area,
+                "area": text,
             },
             parse_result=False,
         )
