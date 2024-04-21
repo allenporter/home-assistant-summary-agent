@@ -1,5 +1,7 @@
 """Fixtures for Summary Agent integration."""
 
+import uuid
+from typing import Literal
 from collections.abc import Generator
 import logging
 from functools import partial
@@ -7,11 +9,12 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.const import Platform
+from homeassistant.const import Platform, MATCH_ALL
+from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, intent
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -34,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 TEST_DOMAIN = "test"
 TEST_DEVICE_ID = (TEST_DOMAIN, "some-device-id")
 TEST_DEVICE_NAME = "Some Device Name"
+TEST_AGENT = "conversation.fake_agent"
 
 
 @pytest.fixture(autouse=True)
@@ -177,3 +181,45 @@ async def mock_test_platform_fixture(
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
         return config_entry
+
+
+@pytest.fixture(name="config_entry")
+def mock_config_entry() -> MockConfigEntry:
+    """Fixture for mock configuration entry."""
+    return MockConfigEntry(domain=DOMAIN, data={"agent_id": TEST_AGENT})
+
+
+class FakeAgent(conversation.ConversationEntity):
+    """Fake agent."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Llama"
+
+    def __init__(self, entity_id: str) -> None:
+        """Initialize FakeAgent."""
+        self._attr_unique_id = str(uuid.uuid1())
+        self.entity_id = entity_id
+        self.conversations = []
+        self.responses = []
+
+    @property
+    def supported_languages(self) -> list[str] | Literal["*"]:
+        """Return a list of supported languages."""
+        return MATCH_ALL
+
+    async def async_process(
+        self, user_input: conversation.ConversationInput
+    ) -> conversation.ConversationResult:
+        """Process a sentence."""
+        self.conversations.append(user_input.text)
+        response = self.responses.pop() if self.responses else "No response"
+        intent_response = intent.IntentResponse(language=user_input.language)
+        intent_response.async_set_speech(response)
+        return conversation.ConversationResult(
+            response=intent_response,
+            conversation_id=user_input.conversation_id,
+        )
+
+    async def async_prepare(self, language: str | None = None) -> None:
+        """Load intents for a language."""
+        return

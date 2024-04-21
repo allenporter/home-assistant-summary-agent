@@ -1,40 +1,48 @@
 """Adds config flow for Summary Agent."""
 
+import logging
+from collections.abc import Mapping
 import voluptuous as vol
+from typing import Any
 
 from homeassistant import config_entries
+from homeassistant.helpers import selector, entity_registry as er
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaConfigFlowHandler,
+    SchemaFlowFormStep,
+)
 
 from .const import DOMAIN, CONF_AGENT_ID
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_AGENT_ID): str,
-    }
-)
+_LOGGER = logging.getLogger(__name__)
+
+CONFIG_FLOW = {
+    "user": SchemaFlowFormStep(
+        vol.Schema(
+            {
+                vol.Required(CONF_AGENT_ID): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="conversation"),
+                ),
+            }
+        )
+    )
+}
+
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(),
+}
 
 
-class SyntheticHomeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class SummaryAgentFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Config flow for synthetic_home."""
+
+    config_flow = CONFIG_FLOW
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
-        """Initialize."""
-        self._errors = {}
-
-    async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
-        errors = {}
-        # if user_input is not None:
-        #     config_file = pathlib.Path(self.hass.config.path(user_input[CONF_FILENAME]))
-        #     try:
-        #         read_config(config_file)
-        #     except FileNotFoundError:
-        #         errors[CONF_FILENAME] = "does_not_exist"
-        #     else:
-        #         return self.async_create_entry(title=user_input[CONF_FILENAME], data=user_input)
-
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
+    def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
+        """Return config entry title."""
+        registry = er.async_get(self.hass)
+        entity_entry = registry.async_get(options[CONF_AGENT_ID])
+        return f"{entity_entry.original_name} Summary Agent"
