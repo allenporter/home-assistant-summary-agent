@@ -1,0 +1,20 @@
+# Templates for conversation agents that summarize the state of the home.
+---
+- trigger:
+    - platform: time_pattern
+      minutes: "/30"
+    - platform: event
+      event_type: event_template_reloaded
+  action:
+    - alias: Summarize Kitchen
+      service: conversation.process
+      data:
+        agent_id: conversation.area_summary
+        text: Kitchen
+      response_variable: summary
+  sensor:
+    - name: Kitchen Summary
+      state: "OK"
+      unique_id: b5f58330-005a-11ef-8ae2-269357c5ca0c
+      attributes:
+        summary: "{{ summary.response.speech.plain.speech }}"

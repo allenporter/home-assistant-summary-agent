@@ -34,6 +34,8 @@ AREA_SUMMARY_SYSTEM_PROMPT = "You are a Home Automation Agent"
 FAKE_AREA_SUMMARY = f"This is a summary of the {TEST_AREA}"
 FAKE_WEATHER_SUMMARY = "It's cold."
 
+AREA_SUMMARY_YAML = pathlib.Path("config/area_summary.yaml")
+
 
 @pytest.mark.parametrize(
     ("mock_entities"),
@@ -101,6 +103,7 @@ class FakeHumiditySensor(SensorEntity):
     _attr_native_value = 45
 
 
+@pytest.mark.parametrize(("expected_lingering_timers"), [True])
 @pytest.mark.parametrize(
     ("mock_entities"),
     [
@@ -136,18 +139,42 @@ async def test_area_with_devices(
     fake_agent = mock_entities["conversation"][0]
     fake_agent.responses.append(FAKE_AREA_SUMMARY)
 
-    response = await hass.services.async_call(
-        "conversation",
-        "process",
-        {"agent_id": "conversation.area_summary", "text": "Kitchen"},
-        blocking=True,
-        return_response=True,
-    )
-    assert response
-    speech_response = (
-        response.get("response", {}).get("speech", {}).get("plain", {}).get("speech")
-    )
-    assert speech_response == FAKE_AREA_SUMMARY
+    with AREA_SUMMARY_YAML.open("r") as fd:
+        content = fd.read()
+        config = yaml.load(content, Loader=yaml.Loader)
+
+    assert await async_setup_component(hass, "template", {"template": config})
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+
+    # Advance past the trigger time
+    next = datetime.datetime.now() + datetime.timedelta(hours=1)
+    with freeze_time(next):
+        async_fire_time_changed(hass, next)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.kitchen_summary")
+    assert state
+    assert state.state == "OK"
+    assert state.attributes == {
+        "friendly_name": "Kitchen Summary",
+        "summary": "This is a summary of the Kitchen",
+    }
+
+
+    # response = await hass.services.async_call(
+    #     "conversation",
+    #     "process",
+    #     {"agent_id": "conversation.area_summary", "text": "Kitchen"},
+    #     blocking=True,
+    #     return_response=True,
+    # )
+    # assert response
+    # speech_response = (
+    #     response.get("response", {}).get("speech", {}).get("plain", {}).get("speech")
+    # )
+    # assert speech_response == FAKE_AREA_SUMMARY
 
     assert len(fake_agent.conversations) == 1
     input_prompt = fake_agent.conversations[0]
