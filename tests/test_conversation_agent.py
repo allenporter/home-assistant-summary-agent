@@ -162,20 +162,6 @@ async def test_area_with_devices(
         "summary": "This is a summary of the Kitchen",
     }
 
-
-    # response = await hass.services.async_call(
-    #     "conversation",
-    #     "process",
-    #     {"agent_id": "conversation.area_summary", "text": "Kitchen"},
-    #     blocking=True,
-    #     return_response=True,
-    # )
-    # assert response
-    # speech_response = (
-    #     response.get("response", {}).get("speech", {}).get("plain", {}).get("speech")
-    # )
-    # assert speech_response == FAKE_AREA_SUMMARY
-
     assert len(fake_agent.conversations) == 1
     input_prompt = fake_agent.conversations[0]
     assert AREA_SUMMARY_SYSTEM_PROMPT in input_prompt
