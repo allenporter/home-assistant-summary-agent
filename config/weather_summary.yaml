@@ -1,0 +1,46 @@
+# Templates for conversation agents that summarize the state of the home.
+---
+- trigger:
+    - platform: time_pattern
+      minutes: "/1"
+    - platform: homeassistant
+      event: start
+    - platform: event
+      event_type: event_template_reloaded
+  action:
+    - variables:
+        weather_entity: weather.home
+        converation_agent_entity: conversation.fake_agent
+        location_name: Los Angeles, CA
+    - service: weather.get_forecasts
+      data:
+        type: hourly
+      target:
+        entity_id:
+          - "{{ weather_entity }}"
+      response_variable: hourly
+    - variables:
+        hourly_forecast: "{{ hourly[weather_entity] }}"
+    - alias: "Summarize Weather"
+      service: conversation.process
+      data:
+        agent_id: "{{ converation_agent_entity }}"
+        text: |-
+          It is {{ now().strftime("%A %B %d %H:%M %Z") }} in {{ location_name }}.
+
+          You are a Home Automation Agent for Home Assistant tasked with summarizing
+          the weather forecast. Your summaries are succinct and you do not elaborate
+          with mundane minor details about unimportant aspects of the weather. The
+          forecast will be given in json and you will summarize in plain text.
+
+          Forecast (in UTC):
+          {{ hourly_forecast }}
+
+          Summary:
+      response_variable: summary
+  sensor:
+    - name: Weather Summary
+      state: "OK"
+      unique_id: 3bbe558a-0003-11ef-a52c-269357c5ca0c
+      attributes:
+        summary: "{{ summary.response.speech.plain.speech }}"

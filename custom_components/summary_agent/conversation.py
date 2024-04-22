@@ -11,7 +11,10 @@ from homeassistant.components import conversation
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import intent, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.components.conversation.agent_manager import async_get_agent
+from homeassistant.components.conversation.agent_manager import (
+    async_get_agent,
+    get_agent_manager,
+)
 
 
 from .const import AREA_SUMMARY_SYSTEM_PROMPT, CONF_AGENT_ID, AREA_SUMMARY_USER_PROMPT
@@ -27,11 +30,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up conversation entities."""
 
-    entity = AreaSummaryConversationEntity(config_entry.data[CONF_AGENT_ID])
-    conversation.async_set_agent(hass, config_entry, entity)
-    async_add_entities([entity])
-
-
+    manager = get_agent_manager(hass)
+    agent_id = config_entry.data[CONF_AGENT_ID]
+    entities = [
+        AreaSummaryConversationEntity(agent_id),
+        TemplateConversationEntity(agent_id),
+    ]
+    async_add_entities(entities)
+    for entity in entities:
+        manager.async_set_agent(entity.entity_id, entity)
 
 
 class BaseAgentConversationEntity(conversation.ConversationEntity):
@@ -52,9 +59,8 @@ class BaseAgentConversationEntity(conversation.ConversationEntity):
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
-
         try:
-            prompt = self._async_generate_prompt(user_input.text)
+            prompt = self.async_generate_prompt(user_input.text)
         except TemplateError as err:
             _LOGGER.error("Error rendering prompt: %s", err)
             intent_response = intent.IntentResponse(language=user_input.language)
@@ -77,14 +83,27 @@ class BaseAgentConversationEntity(conversation.ConversationEntity):
         if not (agent := async_get_agent(self.hass, self._agent_id)):
             raise ValueError(f"Unable to find agent {self._agent_id}")
 
-        return await agent.async_process(agent_input)
+        result = await agent.async_process(agent_input)
+        speech = result.response.speech
+        if "plain" not in speech:
+            speech["plain"] = {}
+        plain = speech["plain"]
+        if "speech" not in plain:
+            plain["speech"] = {}
+        speech_text = plain["speech"]
+        plain["speech"] = self.async_process_response_text(speech_text)
+        return result
 
     async def async_prepare(self, language: str | None = None) -> None:
         """Load intents for a language."""
 
     @abstractmethod
-    def _async_generate_prompt(self, raw_prompt: str, area: str) -> str:
+    def async_generate_prompt(self, input_text: str) -> str:
         """Generate a prompt for the user."""
+
+    def async_process_response_text(self, output_text: str) -> str:
+        """Invoked when the response is generated to allow for side effects."""
+        return output_text
 
 
 class AreaSummaryConversationEntity(BaseAgentConversationEntity):
@@ -93,7 +112,7 @@ class AreaSummaryConversationEntity(BaseAgentConversationEntity):
     _attr_name = "Area Summary"
     _attr_unique_id = "area-summary"
 
-    def _async_generate_prompt(self, text: str) -> str:
+    def async_generate_prompt(self, text: str) -> str:
         """Generate a prompt for the user."""
         raw_prompt = "\n".join(
             [
@@ -107,3 +126,20 @@ class AreaSummaryConversationEntity(BaseAgentConversationEntity):
             },
             parse_result=False,
         )
+
+
+class TemplateConversationEntity(BaseAgentConversationEntity):
+    """Conversation agent that expands a template."""
+
+    _attr_name = "Template"
+    _attr_unique_id = "teamplte"
+
+    def async_generate_prompt(self, text: str) -> str:
+        """Generate a prompt for the user."""
+        return template.Template(text, self.hass).async_render(
+            parse_result=False,
+        )
+
+    def async_process_response_text(self, output_text: str) -> str:
+        """Invoked when the response is generated to allow for side effects."""
+        return output_text
