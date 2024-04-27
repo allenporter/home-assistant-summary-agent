@@ -9,8 +9,11 @@ from homeassistant.components.text import TextEntity
 from homeassistant.helpers import (
     area_registry as ar,
     entity_registry as er,
+    device_registry as dr,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .const import DOMAIN
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,15 +39,22 @@ async def async_setup_entry(
 class AreaSummaryTextEntity(TextEntity):
     """An entity to represent an area summary as text."""
 
+    _attr_name = None
     _attr_has_entity_name = True
     _attr_should_poll = True
 
     def __init__(self, config_entry: ConfigEntry, area_entry: ar.AreaEntry) -> None:
         """Initialize AreaSummaryTextEntity."""
+        self._attr_unique_id = "area-summary-{area_entry.id}"
+        self._attr_native_value: str | None = None
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=f"{area_entry.name} Summary",
+            entry_type=dr.DeviceEntryType.SERVICE,
+            suggested_area=area_entry.name,
+        )
         self._config_entry = config_entry
         self._area_entry = area_entry
-        self._attr_name = f"{area_entry.name} Summary"
-        self._attr_native_value: str | None = None
 
     async def async_update(self) -> None:
         """Update the entity."""
