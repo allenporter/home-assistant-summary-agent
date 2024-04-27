@@ -5,6 +5,7 @@ import datetime
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.const import EntityCategory
 from homeassistant.components.text import TextEntity
 from homeassistant.helpers import (
     area_registry as ar,
@@ -42,6 +43,7 @@ class AreaSummaryTextEntity(TextEntity):
     _attr_name = None
     _attr_has_entity_name = True
     _attr_should_poll = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, config_entry: ConfigEntry, area_entry: ar.AreaEntry) -> None:
         """Initialize AreaSummaryTextEntity."""
