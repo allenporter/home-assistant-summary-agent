@@ -14,6 +14,7 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 PLATFORMS: list[Platform] = [
     Platform.CONVERSATION,
+    Platform.TEXT,
 ]
 
 

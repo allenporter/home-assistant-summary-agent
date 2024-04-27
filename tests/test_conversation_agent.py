@@ -1,4 +1,4 @@
-"""Test Synthetic Home sensor."""
+"""Test summary conversation agent."""
 
 import datetime
 import textwrap
@@ -15,7 +15,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
-from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from homeassistant.components.weather import (
     WeatherEntity,
     WeatherEntityFeature,
@@ -27,7 +26,13 @@ from pytest_homeassistant_custom_component.common import (
     async_fire_time_changed,
 )
 
-from .conftest import TEST_DEVICE_ID, FakeAgent, TEST_AGENT
+from .conftest import (
+    TEST_DEVICE_ID,
+    FakeAgent,
+    TEST_AGENT,
+    FakeHumiditySensor,
+    FakeTempSensor,
+)
 
 TEST_AREA = "Kitchen"
 AREA_SUMMARY_SYSTEM_PROMPT = "You are a Home Automation Agent"
@@ -79,33 +84,9 @@ async def test_area_no_devices(
     )
 
 
-class FakeTempSensor(SensorEntity):
-    """Fake agent."""
-
-    _has_entity_name = True
-    _attr_name = "Temperature"
-    _attr_native_unit_of_measurement = "°F"
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_unique_id = "12345"
-    _attr_device_info = dr.DeviceInfo(identifiers={TEST_DEVICE_ID})
-    _attr_native_value = 68
-
-
-class FakeHumiditySensor(SensorEntity):
-    """Fake agent."""
-
-    _has_entity_name = True
-    _attr_name = "Humidity"
-    _attr_device_class = SensorDeviceClass.HUMIDITY
-    _attr_unique_id = "54321"
-    _attr_device_info = dr.DeviceInfo(identifiers={TEST_DEVICE_ID})
-    _attr_native_unit_of_measurement = "%"
-    _attr_native_value = 45
-
-
 @pytest.mark.parametrize(("expected_lingering_timers"), [True])
 @pytest.mark.parametrize(
-    ("mock_entities"),
+    ("mock_entities", "areas"),
     [
         (
             {
@@ -114,7 +95,8 @@ class FakeHumiditySensor(SensorEntity):
                     FakeTempSensor(),
                     FakeHumiditySensor(),
                 ],
-            }
+            },
+            ["Kitchen"],
         ),
     ],
 )
@@ -123,18 +105,17 @@ async def test_area_with_devices(
     mock_entities: dict[str, Entity],
     setup_integration: None,
     device_registry: dr.DeviceRegistry,
+    area_entries: dict[str, ar.AreaEntry],
 ) -> None:
     """Tests an area summary that has no devices."""
 
     await hass.async_block_till_done()
 
-    area_registry: ar.AreaRegistry = ar.async_get(hass)
-    area_entry = area_registry.async_get_or_create("Kitchen")
-
     # Associate all devices with the area
-    # device_registry = dr.async_get(hass)
     for device_entry in device_registry.devices.values():
-        device_registry.async_update_device(device_entry.id, area_id=area_entry.id)
+        device_registry.async_update_device(
+            device_entry.id, area_id=area_entries["Kitchen"].id
+        )
 
     fake_agent = mock_entities["conversation"][0]
     fake_agent.responses.append(FAKE_AREA_SUMMARY)
@@ -146,7 +127,6 @@ async def test_area_with_devices(
     assert await async_setup_component(hass, "template", {"template": config})
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-
 
     # Advance past the trigger time
     next = datetime.datetime.now() + datetime.timedelta(hours=1)

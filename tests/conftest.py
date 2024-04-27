@@ -14,9 +14,10 @@ from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.helpers import device_registry as dr, intent
+from homeassistant.helpers import device_registry as dr, intent, area_registry as ar
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
@@ -223,3 +224,41 @@ class FakeAgent(conversation.ConversationEntity):
     async def async_prepare(self, language: str | None = None) -> None:
         """Load intents for a language."""
         return
+
+
+class FakeTempSensor(SensorEntity):
+    """Fake agent."""
+
+    _has_entity_name = True
+    _attr_name = "Temperature"
+    _attr_native_unit_of_measurement = "°F"
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_unique_id = "12345"
+    _attr_device_info = dr.DeviceInfo(identifiers={TEST_DEVICE_ID})
+    _attr_native_value = 68
+
+
+class FakeHumiditySensor(SensorEntity):
+    """Fake agent."""
+
+    _has_entity_name = True
+    _attr_name = "Humidity"
+    _attr_device_class = SensorDeviceClass.HUMIDITY
+    _attr_unique_id = "54321"
+    _attr_device_info = dr.DeviceInfo(identifiers={TEST_DEVICE_ID})
+    _attr_native_unit_of_measurement = "%"
+    _attr_native_value = 45
+
+
+@pytest.fixture(autouse=True, name="areas")
+def mock_areas() -> list[str]:
+    """Fixture to define which areas to create."""
+    return []
+
+
+@pytest.fixture(autouse=True, name="area_entries")
+def mock_create_areas(
+    area_registry: ar.AreaRegistry, areas: list[str]
+) -> dict[str, ar.AreaEntry]:
+    """Fixture to create areas for testing."""
+    return {area: area_registry.async_get_or_create(area) for area in areas}
