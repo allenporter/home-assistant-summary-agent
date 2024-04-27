@@ -186,7 +186,7 @@ async def mock_test_platform_fixture(
 @pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:
     """Fixture for mock configuration entry."""
-    return MockConfigEntry(domain=DOMAIN, data={"agent_id": TEST_AGENT})
+    return MockConfigEntry(domain=DOMAIN, data={}, options={"agent_id": TEST_AGENT})
 
 
 class FakeAgent(conversation.ConversationEntity):

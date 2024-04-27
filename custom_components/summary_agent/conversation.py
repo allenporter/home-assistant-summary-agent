@@ -31,7 +31,7 @@ async def async_setup_entry(
     """Set up conversation entities."""
 
     manager = get_agent_manager(hass)
-    agent_id = config_entry.data[CONF_AGENT_ID]
+    agent_id = config_entry.options[CONF_AGENT_ID]
     entities = [
         AreaSummaryConversationEntity(agent_id),
         TemplateConversationEntity(agent_id),
