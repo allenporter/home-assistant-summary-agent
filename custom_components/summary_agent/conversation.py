@@ -17,7 +17,7 @@ from homeassistant.components.conversation.agent_manager import (
 )
 
 
-from .const import AREA_SUMMARY_SYSTEM_PROMPT, CONF_AGENT_ID, AREA_SUMMARY_USER_PROMPT
+from .const import AREA_SUMMARY_SYSTEM_PROMPT, CONF_AGENT_ID, AREA_SUMMARY_USER_PROMPT, AREA_SUMMARY
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -110,7 +110,7 @@ class AreaSummaryConversationEntity(BaseAgentConversationEntity):
     """Conversation agent that summarizes an areas."""
 
     _attr_name = "Area Summary"
-    _attr_unique_id = "area-summary"
+    _attr_unique_id = AREA_SUMMARY
 
     def async_generate_prompt(self, text: str) -> str:
         """Generate a prompt for the user."""

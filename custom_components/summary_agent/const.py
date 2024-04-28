@@ -4,7 +4,7 @@ DOMAIN = "summary_agent"
 
 CONF_AGENT_ID = "agent_id"
 
-
+AREA_SUMMARY = "area-summary"
 AREA_SUMMARY_SYSTEM_PROMPT = """
 You are a Home Automation Agent for Home Assistant tasked with summarizing
 the status of an area of the home. Your summaries are succinct, and do not

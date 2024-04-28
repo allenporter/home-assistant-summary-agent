@@ -33,7 +33,7 @@ AREA_SUMMARY_YAML = pathlib.Path("config/area_summary.yaml")
 @pytest.fixture(name="platforms")
 def mock_platforms() -> list[Platform]:
     """Fixture for platforms loaded by the integration."""
-    return [Platform.CONVERSATION, Platform.TEXT]
+    return [Platform.CONVERSATION, Platform.SENSOR]
 
 
 @pytest.mark.parametrize(
@@ -56,11 +56,6 @@ async def test_area_with_devices(
 ) -> None:
     """Tests an area summary that has no devices."""
 
-    # # Associate all devices with the area
-    # # device_registry = dr.async_get(hass)
-    # for device_entry in device_registry.devices.values():
-    #     device_registry.async_update_device(device_entry.id, area_id=area_entries["Kitchen"].id)
-
     fake_agent = mock_entities["conversation"][0]
     fake_agent.responses.append(FAKE_AREA_SUMMARY)
 
@@ -70,6 +65,6 @@ async def test_area_with_devices(
         async_fire_time_changed(hass, next)
         await hass.async_block_till_done()
 
-    state = hass.states.get("text.kitchen_summary")
+    state = hass.states.get("sensor.kitchen_summary")
     assert state
     assert state.state == "This is a summary of the Kitchen"

@@ -1,12 +1,12 @@
-"""Text platform for summary agent."""
+"""Sensor platform for summary agent."""
 
 import logging
 import datetime
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.const import EntityCategory
-from homeassistant.components.text import TextEntity
+from homeassistant.const import EntityCategory, STATE_UNAVAILABLE
+from homeassistant.components.sensor import RestoreSensor, SensorExtraStoredData
 from homeassistant.helpers import (
     area_registry as ar,
     entity_registry as er,
@@ -14,7 +14,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, AREA_SUMMARY
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,13 +32,26 @@ async def async_setup_entry(
     area_registry: ar.AreaRegistry = ar.async_get(hass)
     entities = []
     for area_entry in area_registry.async_list_areas():
-        entities.append(AreaSummaryTextEntity(config_entry, area_entry))
+        entities.append(AreaSummarySensorEntity(config_entry, area_entry))
 
     async_add_entities(entities)
 
 
-class AreaSummaryTextEntity(TextEntity):
-    """An entity to represent an area summary as text."""
+def get_area_summary_agent_id(hass: HomeAssistant, config_entry_id: str) -> str | None:
+    """Get the Area Summary agent id."""
+    entity_registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry_id
+    )
+    area_summary_agent_id: str | None
+    for entry in entries:
+        if entry.unique_id == AREA_SUMMARY:
+            return entry.entity_id
+    return None
+
+
+class AreaSummarySensorEntity(RestoreSensor):
+    """An entity to represent an area summary as sensor value."""
 
     _attr_name = None
     _attr_has_entity_name = True
@@ -46,8 +59,8 @@ class AreaSummaryTextEntity(TextEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, config_entry: ConfigEntry, area_entry: ar.AreaEntry) -> None:
-        """Initialize AreaSummaryTextEntity."""
-        self._attr_unique_id = "area-summary-{area_entry.id}"
+        """Initialize AreaSummarySensorEntity."""
+        self._attr_unique_id = f"{AREA_SUMMARY}-{area_entry.id}"
         self._attr_native_value: str | None = None
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
@@ -60,22 +73,11 @@ class AreaSummaryTextEntity(TextEntity):
 
     async def async_update(self) -> None:
         """Update the entity."""
-        self._attr_native_value = None
-
-        entity_registry = er.async_get(self.hass)
-        # entity_registry.
-        entries = er.async_entries_for_config_entry(
-            entity_registry, self._config_entry.entry_id
-        )
-        area_summary_agent_id: str | None
-        for entry in entries:
-            if entry.unique_id == "area-summary":
-                area_summary_agent_id = entry.entity_id
-                break
-
-        if area_summary_agent_id is None:
-            _LOGGER.warning("Summary agent not available")
+        if (area_summary_agent_id := get_area_summary_agent_id(self.hass, self._config_entry.entry_id)) is None:
+            _LOGGER.warning("Area Summary Agent could not be found for config entry %s", self._config_entry.entry_id)
+            self._attr_available = False
             return
+        self._attr_available = True
 
         response = await self.hass.services.async_call(
             "conversation",
@@ -88,5 +90,11 @@ class AreaSummaryTextEntity(TextEntity):
             response.get("response", {})
             .get("speech", {})
             .get("plain", {})
-            .get("speech")
+            .get("speech", "unknown")
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Add the enity and restore values."""
+        await super().async_added_to_hass()
+        if (last_sensor_state := await self.async_get_last_sensor_data()):
+            self._attr_native_value = last_sensor_state.native_value
