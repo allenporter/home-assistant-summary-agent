@@ -14,6 +14,11 @@ A sensor is created for every area that is a succint summary of what is happenin
 For example, for an area named `Kitchen` a diagnostic sensor is created called `sensor.kitchen_summary`
 that describes everything happening in the area e.g. `The kitchen is dark`.
 
+### Template Examples
+
+You can see the `config/` subdirectory for other example summary agent recipes.
+
+
 ### Development
 
 ```bash
