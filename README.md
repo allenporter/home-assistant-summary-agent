@@ -7,9 +7,14 @@ A Home Assistant Conversation Agent that summarizes the state of the Home
 The Area Summary agent provides a [Conversation Agent](https://www.home-assistant.io/integrations/conversation/) that can summarize an [Area](https://www.home-assistant.io/docs/organizing/areas/)
 succinctly.
 
-### Development
+### Area Summary Sensors
 
-Testing
+A sensor is created for every area that is a succint summary of what is happening in the area.
+
+For example, for an area named `Kitchen` a diagnostic sensor is created called `sensor.kitchen_summary`
+that describes everything happening in the area e.g. `The kitchen is dark`.
+
+### Development
 
 ```bash
 $ export PYTHONPATH="${PYTHONPATH}:${PWD}/custom_components"
