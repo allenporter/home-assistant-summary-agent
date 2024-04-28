@@ -18,8 +18,10 @@ that describes everything happening in the area e.g. `The kitchen is dark`.
 
 You can see the `config/` subdirectory for other example summary agent recipes.
 
-
 ### Development
+
+See https://github.com/allenporter/home-assistant-datasets for additional detail about
+how to evaluate an LLM in Home Assistant.
 
 ```bash
 $ export PYTHONPATH="${PYTHONPATH}:${PWD}/custom_components"
