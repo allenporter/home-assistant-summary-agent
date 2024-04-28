@@ -56,6 +56,7 @@ class AreaSummarySensorEntity(RestoreSensor):
     _attr_has_entity_name = True
     _attr_should_poll = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:comment-text"
 
     def __init__(self, config_entry: ConfigEntry, area_entry: ar.AreaEntry) -> None:
         """Initialize AreaSummarySensorEntity."""
