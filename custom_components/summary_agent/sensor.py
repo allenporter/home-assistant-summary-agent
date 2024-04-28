@@ -5,8 +5,8 @@ import datetime
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.const import EntityCategory, STATE_UNAVAILABLE
-from homeassistant.components.sensor import RestoreSensor, SensorExtraStoredData
+from homeassistant.const import EntityCategory
+from homeassistant.components.sensor import RestoreSensor
 from homeassistant.helpers import (
     area_registry as ar,
     entity_registry as er,
@@ -43,7 +43,6 @@ def get_area_summary_agent_id(hass: HomeAssistant, config_entry_id: str) -> str 
     entries = er.async_entries_for_config_entry(
         entity_registry, config_entry_id
     )
-    area_summary_agent_id: str | None
     for entry in entries:
         if entry.unique_id == AREA_SUMMARY:
             return entry.entity_id
