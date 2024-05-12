@@ -1,0 +1,19 @@
+{
+  "template": "https://github.com/allenporter/cookiecutter-home-assistant-custom-component",
+  "commit": "fbf4f1f6ece3316d982242cb9fc133b0025d39e1",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "full_name": "Allen Porter",
+      "email": "allen.porter@gmail.com",
+      "github_username": "allenporter",
+      "project_name": "summary-agent",
+      "domain": "summary_agent",
+      "name": "Summary Agent",
+      "description": "A Home Assistant Conversation Agent that summarizes the state of the Home.",
+      "version": "1.5.0",
+      "_template": "https://github.com/allenporter/cookiecutter-home-assistant-custom-component"
+    }
+  },
+  "directory": null
+}
