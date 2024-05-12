@@ -48,7 +48,6 @@ jobs:
 
           echo "has_changes=$CHANGES" >> "$GITHUB_OUTPUT"
 
-
       - name: Run update if available
         if: steps.check.outputs.has_changes == '1'
         run: |
