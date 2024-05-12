@@ -1,0 +1,9 @@
+diff a/.pre-commit-config.yaml b/.pre-commit-config.yaml	(rejected hunks)
+@@ -22,6 +22,7 @@ repos:
+   rev: v1.10.0
+   hooks:
+   - id: mypy
++    files: ^custom_components/
+ - repo: https://github.com/codespell-project/codespell
+   rev: v2.2.6
+   hooks:
