@@ -2,6 +2,7 @@
 
 import logging
 import datetime
+from typing import cast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -86,15 +87,15 @@ class AreaSummarySensorEntity(RestoreSensor):
             blocking=True,
             return_response=True,
         )
-        self._attr_native_value = (
-            response.get("response", {})
+        self._attr_native_value = cast(str, (
+            response.get("response", {})  # type: ignore[union-attr]
             .get("speech", {})
             .get("plain", {})
             .get("speech", "unknown")
-        )
+        ))
 
     async def async_added_to_hass(self) -> None:
         """Add the entity and restore values."""
         await super().async_added_to_hass()
         if (last_sensor_state := await self.async_get_last_sensor_data()):
-            self._attr_native_value = last_sensor_state.native_value
+            self._attr_native_value = cast(str, last_sensor_state.native_value)

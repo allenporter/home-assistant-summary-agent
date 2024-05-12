@@ -11,6 +11,7 @@ from homeassistant.components import conversation
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import intent, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.components.conversation import AbstractConversationAgent
 from homeassistant.components.conversation.agent_manager import (
     async_get_agent,
     get_agent_manager,
@@ -41,7 +42,7 @@ async def async_setup_entry(
         manager.async_set_agent(entity.entity_id, entity)
 
 
-class BaseAgentConversationEntity(conversation.ConversationEntity):
+class BaseAgentConversationEntity(conversation.ConversationEntity, AbstractConversationAgent):
     """Conversation agent that summarizes an areas."""
 
     _attr_has_entity_name = True

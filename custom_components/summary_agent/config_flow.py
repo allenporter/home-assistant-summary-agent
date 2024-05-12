@@ -45,4 +45,5 @@ class SummaryAgentFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         """Return config entry title."""
         registry = er.async_get(self.hass)
         entity_entry = registry.async_get(options[CONF_AGENT_ID])
+        assert entity_entry
         return f"{entity_entry.original_name} Summary Agent"
