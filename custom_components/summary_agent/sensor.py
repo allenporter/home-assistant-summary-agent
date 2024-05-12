@@ -94,7 +94,7 @@ class AreaSummarySensorEntity(RestoreSensor):
         )
 
     async def async_added_to_hass(self) -> None:
-        """Add the enity and restore values."""
+        """Add the entity and restore values."""
         await super().async_added_to_hass()
         if (last_sensor_state := await self.async_get_last_sensor_data()):
             self._attr_native_value = last_sensor_state.native_value
