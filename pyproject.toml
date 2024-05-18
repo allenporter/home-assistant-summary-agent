@@ -1,7 +1,5 @@
 [tool.mypy]
-exclude = [
-  "venv/",
-]
+exclude = ["venv/", "tests/"]
 platform = "linux"
 show_error_codes = true
 follow_imports = "normal"
@@ -12,9 +10,7 @@ warn_incomplete_stub = true
 warn_redundant_casts = true
 warn_unused_configs = true
 warn_unused_ignores = true
-disable_error_code = [
-    "import-untyped",
-]
+disable_error_code = ["import-untyped"]
 extra_checks = false
 check_untyped_defs = true
 disallow_incomplete_defs = true

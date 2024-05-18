@@ -18,7 +18,12 @@ from homeassistant.components.conversation.agent_manager import (
 )
 
 
-from .const import AREA_SUMMARY_SYSTEM_PROMPT, CONF_AGENT_ID, AREA_SUMMARY_USER_PROMPT, AREA_SUMMARY
+from .const import (
+    AREA_SUMMARY_SYSTEM_PROMPT,
+    CONF_AGENT_ID,
+    AREA_SUMMARY_USER_PROMPT,
+    AREA_SUMMARY,
+)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +47,9 @@ async def async_setup_entry(
         manager.async_set_agent(entity.entity_id, entity)
 
 
-class BaseAgentConversationEntity(conversation.ConversationEntity, AbstractConversationAgent):
+class BaseAgentConversationEntity(
+    conversation.ConversationEntity, AbstractConversationAgent
+):
     """Conversation agent that summarizes an areas."""
 
     _attr_has_entity_name = True
@@ -121,12 +128,13 @@ class AreaSummaryConversationEntity(BaseAgentConversationEntity):
                 AREA_SUMMARY_USER_PROMPT,
             ]
         )
-        return template.Template(raw_prompt, self.hass).async_render(
+        result = template.Template(raw_prompt, self.hass).async_render(
             {
                 "area": text,
             },
             parse_result=False,
         )
+        return str(result)
 
 
 class TemplateConversationEntity(BaseAgentConversationEntity):
@@ -137,9 +145,10 @@ class TemplateConversationEntity(BaseAgentConversationEntity):
 
     def async_generate_prompt(self, text: str) -> str:
         """Generate a prompt for the user."""
-        return template.Template(text, self.hass).async_render(
+        result = template.Template(text, self.hass).async_render(
             parse_result=False,
         )
+        return str(result)
 
     def async_process_response_text(self, output_text: str) -> str:
         """Invoked when the response is generated to allow for side effects."""
