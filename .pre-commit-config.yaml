@@ -1,25 +1,35 @@
 ---
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v4.6.0
     hooks:
-      - id: check-added-large-files
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
       - id: check-yaml
         args:
           - --allow-multiple-documents
-        # Can't handle home assistant constructors
-        exclude: ^config/blueprints/automation/allenporter/notify_agent_agenda.yaml$
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
+        exclude: ^config/.*$
+      - id: check-added-large-files
   - repo: https://github.com/psf/black
-    rev: 24.3.0
+    rev: 24.4.2
     hooks:
       - id: black
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.3.3"
+    rev: v0.4.4
     hooks:
       - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
+        args:
+          - --fix
+          - --exit-non-zero-on-fix
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: script/run-mypy.sh
+        language: script
+        types: [python]
+        require_serial: true
+        files: ^custom_components/
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.6
     hooks:
@@ -30,6 +40,7 @@ repos:
     rev: v1.35.1
     hooks:
       - id: yamllint
+        exclude: '^tests/tool/testdata/.*\.yaml$'
         args:
           - -c
           - ".yaml-lint.yaml"
@@ -37,3 +48,7 @@ repos:
     rev: v3.1.0
     hooks:
       - id: prettier
+  - repo: https://github.com/asottile/setup-cfg-fmt
+    rev: v1.20.0
+    hooks:
+     - id: setup-cfg-fmt
