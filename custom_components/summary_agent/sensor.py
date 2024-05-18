@@ -2,6 +2,7 @@
 
 import logging
 import datetime
+import textwrap
 from typing import cast
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,6 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = datetime.timedelta(minutes=15)
 PARALLEL_UPDATES = 1
+MAX_LENGTH = 255
+PLACEHOLDER = "..."
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -87,12 +91,13 @@ class AreaSummarySensorEntity(RestoreSensor):
             blocking=True,
             return_response=True,
         )
-        self._attr_native_value = cast(str, (
+        value = cast(str, (
             response.get("response", {})  # type: ignore[union-attr]
             .get("speech", {})
             .get("plain", {})
             .get("speech", "unknown")
         ))
+        self._attr_native_value = textwrap.shorten(value, width=MAX_LENGTH, break_long_words=True, placeholder=PLACEHOLDER)
 
     async def async_added_to_hass(self) -> None:
         """Add the entity and restore values."""

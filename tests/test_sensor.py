@@ -68,3 +68,38 @@ async def test_area_with_devices(
     state = hass.states.get("sensor.kitchen_summary")
     assert state
     assert state.state == "This is a summary of the Kitchen"
+
+
+
+@pytest.mark.parametrize(
+    ("mock_entities", "areas"),
+    [
+        (
+            {
+                "conversation": [FakeAgent(TEST_AGENT)],
+            },
+            ["Kitchen"],
+        ),
+    ],
+)
+async def test_long_summary_truncation(
+    hass: HomeAssistant,
+    area_entries: dict[str, ar.AreaEntry],
+    mock_entities: dict[str, Entity],
+    setup_integration: None,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Tests that an area summary is truncated."""
+
+    fake_agent = mock_entities["conversation"][0]
+    fake_agent.responses.append("A " * 150)
+
+    # Advance past the trigger time
+    next = datetime.datetime.now() + datetime.timedelta(minutes=20)
+    with freeze_time(next):
+        async_fire_time_changed(hass, next)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.kitchen_summary")
+    assert state
+    assert state.state == "A " * 125 + "A..."
