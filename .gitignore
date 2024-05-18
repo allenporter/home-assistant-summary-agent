@@ -9,5 +9,4 @@ __pycache__
 .coverage
 
 **/secrets.yaml
-config
 tmp

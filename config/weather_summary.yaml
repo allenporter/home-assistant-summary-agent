@@ -33,10 +33,10 @@
           with mundane minor details about unimportant aspects of the weather. The
           forecast will be given in json and you will summarize in plain text.
 
-          Forecast (in UTC):
+          Hourly forecast (in UTC):
           {{ hourly_forecast }}
 
-          Summary:
+          Hourly forecast summary:
       response_variable: summary
   sensor:
     - name: Weather Summary
