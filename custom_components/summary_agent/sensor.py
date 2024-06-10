@@ -50,7 +50,7 @@ def get_area_summary_agent_id(hass: HomeAssistant, config_entry_id: str) -> str 
     )
     for entry in entries:
         if entry.unique_id == AREA_SUMMARY:
-            return entry.entity_id
+            return entry.entity_id  # type: ignore[no-any-return]
     return None
 
 

@@ -11,7 +11,7 @@ from homeassistant.components import conversation
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import intent, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.components.conversation import AbstractConversationAgent
+from homeassistant.components.conversation import AbstractConversationAgent, ConversationResult
 from homeassistant.components.conversation.agent_manager import (
     async_get_agent,
     get_agent_manager,
@@ -36,7 +36,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up conversation entities."""
 
-    manager = get_agent_manager(hass)
+    manager = get_agent_manager(hass)  # type: ignore[misc]
     agent_id = config_entry.options[CONF_AGENT_ID]
     entities = [
         AreaSummaryConversationEntity(agent_id),
@@ -91,7 +91,7 @@ class BaseAgentConversationEntity(
         if not (agent := async_get_agent(self.hass, self._agent_id)):
             raise ValueError(f"Unable to find agent {self._agent_id}")
 
-        result = await agent.async_process(agent_input)
+        result: ConversationResult = await agent.async_process(agent_input)
         speech = result.response.speech
         if "plain" not in speech:
             speech["plain"] = {}
