@@ -16,3 +16,4 @@ voluptuous-stubs>=0.1.1
 mutagen>=1.47.0
 ha-ffmpeg>=3.2.0
 pymicro_vad>=1.0.1
+pyspeex_noise>=1.0.2
