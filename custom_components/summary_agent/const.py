@@ -36,7 +36,7 @@ Summary: The car is almost charged.
 """
 
 AREA_SUMMARY_USER_PROMPT = """
-Please summarize the following area:
+Please summarize the following area in less than 255 characters:
 
 Area: {{ area }}
 {%- set devices = area_devices(area) -%}
