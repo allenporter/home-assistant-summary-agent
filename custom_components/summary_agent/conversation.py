@@ -87,6 +87,7 @@ class BaseAgentConversationEntity(
             language=user_input.language,
             conversation_id=user_input.conversation_id,
             device_id=user_input.device_id,
+            agent_id=self._agent_id,
         )
         if not (agent := async_get_agent(self.hass, self._agent_id)):
             raise ValueError(f"Unable to find agent {self._agent_id}")
