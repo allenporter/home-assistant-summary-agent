@@ -26,6 +26,10 @@ See https://github.com/allenporter/home-assistant-datasets for additional detail
 how to evaluate an LLM in Home Assistant.
 
 ```bash
-$ export PYTHONPATH="${PYTHONPATH}:${PWD}/custom_components"
+$ export PYTHONPATH="${PYTHONPATH}:${PWD}"
+$ pip install uv
+$ uv venv --python=3.13
+$ source .venv/bin/activate
+$ uv pip install -r requirements_dev.txt --prerelease=allow
 $ py.test
 ```
