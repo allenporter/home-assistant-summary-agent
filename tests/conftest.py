@@ -98,11 +98,9 @@ def mock_setup_test_integration(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        for platform in test_platforms:
-            await hass.config_entries.async_forward_entry_setup(
-                config_entry,
-                platform,
-            )
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, test_platforms
+        )
         return True
 
     async def async_unload_entry_init(
