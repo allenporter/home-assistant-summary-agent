@@ -150,7 +150,7 @@ async def test_area_with_devices(
             """
         Area: Kitchen
         - Some Device Name
-          - sensor Temperature: 20 °C
+          - sensor Temperature: 20.0 °C
           - sensor Humidity: 45 %
         Summary:"""
         )
