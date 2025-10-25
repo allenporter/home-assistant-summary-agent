@@ -26,9 +26,9 @@ jobs:
             commit-message: "chore: reject new Cruft update"
             title: Reject new updates detected with Cruft
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         
       - name: Install Cruft
         run: pip3 install cruft
