@@ -1,6 +1,8 @@
 # home-assistant-summary-agent
 
-A Home Assistant Conversation Agent that summarizes the state of the Home
+A Home Assistant Conversation Agent that summarizes the state of the Home.
+
+This repository is no longer needed since we have developed [AI Task](https://www.home-assistant.io/integrations/ai_task/).
 
 ### Area Summary
 
